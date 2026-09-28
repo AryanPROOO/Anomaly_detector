@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Healtho - Real-Time Cardiac Anomaly & Health Monitoring</title>
+    <!-- Tailwind CSS v3 with Plugins -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome & Google Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style data-purpose="custom-styling">
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f5f7fb;
+            color: #0f172a;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+
+        .floating-badge {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(226, 232, 240, 0.9);
+            box-shadow: 0 15px 35px -10px rgba(15, 23, 42, 0.08);
+        }
+
+        /* Custom scrollbar hiding */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        @keyframes pulse-ring {
+            0% { transform: scale(0.96); opacity: 0.85; }
+            50% { transform: scale(1.04); opacity: 1; }
+            100% { transform: scale(0.96); opacity: 0.85; }
+        }
+
+        .heart-beat-anim {
+            animation: pulse-ring 1.2s infinite ease-in-out;
+        }
+
+        .ecg-line-transition {
+            transition: d 0.15s linear;
+        }
+    </style>
+</head>
+
+<body class="text-slate-900 antialiased min-h-screen flex flex-col justify-between selection:bg-blue-100">
+    <!-- BEGIN: TopHeader (Unified 2-Color Palette: Royal Blue & Minimalist Slate) -->
+    <header class="w-full px-8 py-4 flex items-center justify-between bg-white shadow-sm border-b border-slate-100"
+        data-purpose="dashboard-navigation">
+        <!-- Brand Logo -->
+        <div class="flex items-center gap-2.5">
+            <div
+                class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+                <i class="fa-solid fa-heart-pulse text-lg"></i>
+            </div>
+            <div>
+                <span class="text-xl font-extrabold tracking-wider text-slate-900">HEALTHO</span>
+                <span class="block text-[10px] font-bold text-blue-600 uppercase tracking-widest">Real-Time Anomaly Guard</span>
+            </div>
+        </div>
+        <!-- Center Navigation: Live Dashboard Only -->
+        <nav class="hidden md:flex items-center">
+            <button
+                class="flex items-center gap-2 px-5 py-2.5 rounded-full bg-blue-600 text-white font-semibold text-sm shadow-md shadow-blue-600/20 transition-all">
+                <i class="fa-solid fa-chart-line text-xs"></i>
+                <span>Live Dashboard</span>
+            </button>
+        </nav>
+        <!-- Right Status Indicators -->
+        <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-700" id="wsStatus">
+                <span class="w-2.5 h-2.5 rounded-full bg-blue-600 shadow-[0_0_8px_#2563eb]"></span>
+                <span id="wsStatusText">WebSocket: Active</span>
+            </div>
+            <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-700">
+                <i class="fa-brands fa-aws text-blue-600"></i>
+                <span id="awsStatusText">AWS Notifier: MOCK</span>
+            </div>
+            <!-- User Profile Avatar -->
+            <div class="w-10 h-10 rounded-full overflow-hidden ring-2 ring-blue-600/30 shadow-sm ml-1 cursor-pointer">
+                <img alt="James Avatar" class="w-full h-full object-cover"
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuCfxaqWEt6eddNQM-j1TkTO1-tAI0iA_I2cSKeKOlVMiQreTR7coE-NNOtrgeJsAvtUkUVYcD931xdEdmJZvYEXaUWRqNOMaHJ1JqpR3JnNQxdBWUq1B5NqZo6NxcyVkzjKwwwySfOtzkPjHdE8FrOyDH3BIg_62l5ghjUSuulizinBEPAGuO73d_EGlF3-DX8z1unKfXlj5oizQidSraQI_HBJTZW61HhS_5eaBTkDRjqG5X2MVvHPyg" />
+            </div>
+        </div>
+    </header>
+    <!-- END: TopHeader -->
+
+    <!-- BEGIN: MainContent -->
+    <main class="flex-1 w-full max-w-[1580px] mx-auto p-4 md:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <!-- LEFT COLUMN: 3D Anatomical Viewer & Selector (7 Cols) -->
+        <section class="lg:col-span-7 flex flex-col justify-between h-full min-h-[640px]" data-purpose="3d-organ-inspection">
+            <!-- Greeting Header -->
+            <div class="mb-4 flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight">Hi, James!</h1>
+                    <p class="text-slate-500 font-medium mt-1 text-sm">Monitoring Patient Cardiac Telemetry & Real-Time ECG Stream</p>
+                </div>
+                <!-- Action Controls (Unified Royal Blue Theme) -->
+                <div class="flex gap-2">
+                    <button onclick="triggerECGSimulation()" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-600/20 flex items-center gap-2 transition">
+                        <i class="fa-solid fa-play"></i> Stream Kaggle ECG Patient Data
+                    </button>
+                </div>
+            </div>
+
+            <!-- 3D Heart Visual Canvas Container -->
+            <div class="relative flex-1 flex items-center justify-center my-2 select-none min-h-[420px]">
+                <!-- Floating Left Action Buttons -->
+                <div class="absolute left-0 top-1/2 -translate-y-1/2 flex flex-col gap-3 z-20">
+                    <button class="w-10 h-10 rounded-full bg-white shadow-md border border-slate-200 flex items-center justify-center text-slate-700 hover:text-blue-600 hover:shadow-lg transition">
+                        <i class="fa-solid fa-magnifying-glass-plus"></i>
+                    </button>
+                    <button class="w-10 h-10 rounded-full bg-white shadow-md border border-slate-200 flex items-center justify-center text-slate-700 hover:text-blue-600 hover:shadow-lg transition">
+                        <i class="fa-solid fa-expand"></i>
+                    </button>
+                </div>
+
+                <!-- Heart Visual Representation (Monochrome Royal Blue Palette) -->
+                <div class="relative w-[340px] h-[340px] sm:w-[380px] sm:h-[380px] flex items-center justify-center">
+                    <!-- Background Ambient Glow (Red) -->
+                    <div class="absolute inset-0 bg-red-400/20 blur-3xl rounded-full scale-90 pointer-events-none heart-beat-anim" id="heartGlow"></div>
+                    <!-- Anatomical SVG Heart Graphic (Classic Red) -->
+                    <svg class="w-full h-full drop-shadow-[0_25px_35px_rgba(225,29,72,0.35)] heart-beat-anim" fill="none" viewbox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <lineargradient gradientunits="userSpaceOnUse" id="aortaGrad" x1="180" x2="300" y1="60" y2="280">
+                                <stop offset="0%" stop-color="#f87171"></stop>
+                                <stop offset="50%" stop-color="#ef4444"></stop>
+                                <stop offset="100%" stop-color="#b91c1c"></stop>
+                            </lineargradient>
+                            <radialgradient cx="40%" cy="40%" id="heartShade" r="65%">
+                                <stop offset="0%" stop-color="#f87171"></stop>
+                                <stop offset="45%" stop-color="#e11d48"></stop>
+                                <stop offset="85%" stop-color="#be123c"></stop>
+                                <stop offset="100%" stop-color="#881337"></stop>
+                            </radialgradient>
+                        </defs>
+                        <path d="M210 140 C200 60, 290 40, 310 140 C325 210, 290 260, 260 270" stroke="url(#aortaGrad)" stroke-linecap="round" stroke-width="40"></path>
+                        <path d="M220 70 L215 35 M255 60 L255 30 M285 70 L295 40" stroke="#f87171" stroke-linecap="round" stroke-width="16"></path>
+                        <path d="M170 200 C110 180, 80 250, 60 260 M100 215 C70 230, 50 210, 35 220" stroke="#ef4444" stroke-linecap="round" stroke-width="12"></path>
+                        <path d="M310 210 C380 200, 410 260, 440 270 M360 215 C400 235, 430 215, 450 230" stroke="#ef4444" stroke-linecap="round" stroke-width="12"></path>
+                        <path d="M200 170 C140 170, 95 240, 130 330 C155 390, 210 460, 265 470 C310 478, 360 410, 370 330 C385 240, 310 170, 260 170 Z" fill="url(#heartShade)"></path>
+                    </svg>
+
+                    <!-- Glassmorphism Floating Metric Card: Z-Score Anomaly -->
+                    <div class="floating-badge absolute top-[36%] right-[5%] sm:right-[10%] rounded-3xl p-4 sm:p-5 flex flex-col min-w-[210px] z-30 border border-slate-200/80">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-sm" id="zScoreIcon">
+                                <i class="fa-solid fa-bolt"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-semibold text-slate-700">Anomaly Z-Score</h4>
+                                <p class="text-[11px] text-slate-400 font-medium">Confidence Interval</p>
+                            </div>
+                        </div>
+                        <div class="mt-3 flex items-baseline gap-2">
+                            <span class="text-3xl font-bold text-slate-900 font-mono" id="zScoreVal">0.00</span>
+                            <span class="text-xs font-bold text-blue-600" id="zScoreTag">Z &lt; 2.5 Normal</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rotation Arc Slider Indicator -->
+                <div class="absolute bottom-2 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none">
+                    <svg class="w-48 h-8 overflow-visible" viewbox="0 0 160 30">
+                        <path d="M 10 28 A 120 40 0 0 1 150 28" fill="none" stroke="#cbd5e1" stroke-dasharray="3 3" stroke-width="2"></path>
+                    </svg>
+                    <div class="w-5 h-5 -mt-3 rounded-full bg-blue-600 ring-4 ring-blue-100 shadow-md flex items-center justify-center">
+                        <div class="w-1.5 h-1.5 rounded-full bg-white"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Organ Selector: Heart & ECG Only -->
+            <div class="flex justify-center mt-4">
+                <button class="flex items-center gap-2 px-6 py-2.5 rounded-full bg-blue-600 text-white text-xs font-semibold shadow-md shadow-blue-500/25 whitespace-nowrap">
+                    <i class="fa-solid fa-heart"></i> <span>Heart & ECG</span>
+                </button>
+            </div>
+        </section>
+        <!-- END: Left Column -->
+
+        <!-- RIGHT COLUMN: Metrics & Alerts (5 Cols) -->
+        <section class="lg:col-span-5 flex flex-col gap-6" data-purpose="metrics-and-schedules">
+            <!-- Top Row Stat Cards (2 Cards) -->
+            <div class="grid grid-cols-2 gap-4">
+                <!-- Stat Card 1: REAL-TIME MOVING HEART RATE & LIVE ECG WAVEFORM -->
+                <div class="bg-white rounded-3xl p-5 shadow-sm border border-slate-200 flex flex-col justify-between h-[170px]">
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 font-bold">
+                            <i class="fa-solid fa-heart-pulse"></i>
+                        </div>
+                        <div>
+                            <span class="text-xs font-semibold text-slate-500">Heart Rate</span>
+                            <p class="text-2xl font-bold text-slate-900 mt-0.5 font-mono" id="heartRateVal">72 <span class="text-xs font-medium text-slate-500 font-sans">/Bpm</span></p>
+                        </div>
+                    </div>
+                    <!-- REAL-TIME MOVING ECG TIME-SERIES SVG WAVEFORM -->
+                    <div class="w-full h-14 flex items-end overflow-hidden pt-1">
+                        <svg class="w-full h-12 overflow-visible" preserveaspectratio="none" viewbox="0 0 200 40">
+                            <path d="M 0 20 L 10 20 L 20 20 L 30 20 L 40 20 L 50 20 L 60 20 L 70 20 L 80 20 L 90 20 L 100 20 L 110 20 L 120 20 L 130 20 L 140 20 L 150 20 L 160 20 L 170 20 L 180 20 L 190 20 L 200 20"
+                                fill="none" stroke="#2563eb" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" id="ecgWaveformPath" class="ecg-line-transition"></path>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Stat Card 2: 30s Window Error Rate -->
+                <div class="bg-white rounded-3xl p-5 shadow-sm border border-slate-200 flex flex-col justify-between h-[170px]">
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 font-bold">
+                            <i class="fa-solid fa-chart-pie"></i>
+                        </div>
+                        <div>
+                            <span class="text-xs font-semibold text-slate-500">Anomaly Rate</span>
+                            <p class="text-2xl font-bold text-slate-900 mt-0.5 font-mono" id="errorRateVal">0.00%</p>
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-1.5">
+                        <div class="flex justify-between text-xs font-semibold text-slate-500">
+                            <span>Baseline Rate:</span>
+                            <span class="text-slate-900 font-bold font-mono" id="baselineRateVal">0.00%</span>
+                        </div>
+                        <div class="w-full h-3 rounded-full bg-slate-100 overflow-hidden p-0.5 border border-slate-200/50">
+                            <div class="h-full rounded-full bg-blue-600 w-[0%] transition-all duration-300" id="errorRateProgress"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Middle Row Stat Cards (2 Cards) -->
+            <div class="grid grid-cols-2 gap-4">
+                <!-- Stat Card 3: Signal Velocity & Total Count -->
+                <div class="bg-white rounded-3xl p-5 shadow-sm border border-slate-200 flex flex-col justify-between h-[170px]">
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 font-bold">
+                            <i class="fa-solid fa-gauge-high"></i>
+                        </div>
+                        <div>
+                            <span class="text-xs font-semibold text-slate-500">Signal Velocity</span>
+                            <p class="text-2xl font-bold text-slate-900 mt-0.5 font-mono" id="throughputVal">0.0 /s</p>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center text-xs font-semibold text-slate-500 pt-2 border-t border-slate-100">
+                        <span>Window Signals:</span>
+                        <strong class="text-slate-900 text-sm font-mono" id="totalLogsVal">0</strong>
+                    </div>
+                </div>
+
+                <!-- Stat Card 4: Cardiac Function Efficiency -->
+                <div class="bg-white rounded-3xl p-5 shadow-sm border border-slate-200 flex flex-col justify-between h-[170px]">
+                    <div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold text-slate-800">Heart Efficiency</span>
+                            <i class="fa-solid fa-heart-pulse text-blue-600 text-xs"></i>
+                        </div>
+                        <div class="mt-2 flex items-baseline gap-2">
+                            <span class="text-2xl font-bold text-slate-900 font-mono" id="efficiencyVal">98%</span>
+                            <span class="text-xs font-semibold text-blue-600" id="efficiencyStatus">Optimal</span>
+                        </div>
+                    </div>
+                    <div class="space-y-1.5">
+                        <div class="w-full h-3 rounded-full bg-slate-100 overflow-hidden p-0.5 border border-slate-200/50">
+                            <div class="h-full rounded-full bg-blue-600 w-[98%] transition-all duration-300" id="efficiencyBar"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Real-Time Cardiac & Anomaly Alert Feed Card -->
+            <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 flex flex-col gap-4">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                        <i class="fa-solid fa-bell text-blue-600"></i> Real-Time Cardiac Alert Feed
+                    </h3>
+                    <span class="px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-bold" id="alertCountBadge">0 Alerts</span>
+                </div>
+                <!-- Alert Feed Scroll List -->
+                <div class="flex flex-col gap-3 max-h-[320px] overflow-y-auto pr-1" id="alertFeedList">
+                    <div class="text-center py-8 text-slate-400 text-xs flex flex-col items-center gap-2">
+                        <i class="fa-solid fa-shield-heart text-3xl opacity-40 text-blue-600"></i>
+                        <p>No anomalies detected. Patient heart rhythm operating normally.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- END: Right Column -->
+    </main>
+    <!-- END: MainContent -->
+
+    <!-- JavaScript Real-Time WebSocket & Moving ECG Time-Series Engine -->
+    <script>
+        let socket = null;
+        let alertCount = 0;
+
+        // REAL-TIME CONTINUOUS TIME-SERIES ECG WAVEFORM ENGINE
+        // 20 Time-series sample points across SVG width (viewBox 0 0 200 40)
+        let ecgTimeSeries = Array(21).fill(20);
+        let targetBPM = 72;
+        let currentBPM = 72;
+
+        document.addEventListener("DOMContentLoaded", () => {
+            initECGTicker();
+            connectWebSocket();
+            fetchStatus();
+        });
+
+        // 100ms High-Frequency Real-Time Waveform Ticker
+        function initECGTicker() {
+            setInterval(() => {
+                // Smoothly interpolate current BPM towards target BPM time-series metric
+                currentBPM += (targetBPM - currentBPM) * 0.15;
+                document.getElementById('heartRateVal').innerHTML = `${Math.round(currentBPM)} <span class="text-xs font-medium text-slate-500 font-sans">/Bpm</span>`;
+
+                // Generate realistic ECG P-Q-R-S-T wave pulse spike based on current BPM frequency
+                let step = Date.now() % 800; // 800ms heartbeat cycle
+                let newY = 20;
+
+                if (step < 60) newY = 16;         // P wave
+                else if (step < 120) newY = 24;    // Q wave
+                else if (step < 180) newY = 4;     // R peak spike (high amplitude)
+                else if (step < 240) newY = 36;    // S dip
+                else if (step < 320) newY = 14;    // T wave
+                else newY = 20 + (Math.random() * 2 - 1); // Baseline baseline micro-vibration
+
+                // Push new amplitude point into rolling time-series window
+                ecgTimeSeries.push(newY);
+                if (ecgTimeSeries.length > 21) ecgTimeSeries.shift();
+
+                // Build SVG path string: M 0 y0 L 10 y1 L 20 y2 ... L 200 y20
+                let pathStr = "M 0 " + ecgTimeSeries[0];
+                for (let i = 1; i < ecgTimeSeries.length; i++) {
+                    let x = i * 10;
+                    pathStr += ` L ${x} ${ecgTimeSeries[i].toFixed(1)}`;
+                }
+
+                document.getElementById('ecgWaveformPath').setAttribute('d', pathStr);
+            }, 100);
+        }
+
+        function connectWebSocket() {
+            const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+            const wsUrl = `${protocol}//${window.location.host}/ws`;
+
+            socket = new WebSocket(wsUrl);
+
+            socket.onopen = () => {
+                document.getElementById('wsStatusText').innerText = "WebSocket: Active";
+            };
+
+            socket.onmessage = (event) => {
+                try {
+                    const msg = JSON.parse(event.data);
+                    if (msg.type === "log_entry") {
+                        handleLogEntry(msg.data);
+                    } else if (msg.type === "metrics") {
+                        handleMetricsUpdate(msg.data);
+                    } else if (msg.type === "alert") {
+                        handleAlert(msg.data);
+                    }
+                } catch (e) {
+                    console.error("Failed to parse WebSocket payload:", e);
+                }
+            };
+
+            socket.onclose = () => {
+                document.getElementById('wsStatusText').innerText = "WebSocket: Disconnected";
+                setTimeout(connectWebSocket, 3000);
+            };
+        }
+
+        // Live Log/ECG signal handler
+        function handleLogEntry(log) {
+            // Update real-time target BPM from actual incoming latency / lead amplitude metric
+            if (log.latency_ms) {
+                // Map latency metric to realistic patient BPM (60 - 150 BPM)
+                let calculatedBPM = Math.min(Math.max(Math.round(60 + (log.latency_ms % 75)), 55), 160);
+                targetBPM = calculatedBPM;
+            }
+        }
+
+        function handleMetricsUpdate(data) {
+            document.getElementById('zScoreVal').innerText = data.z_score;
+            document.getElementById('errorRateVal').innerText = `${data.error_rate_pct}%`;
+            document.getElementById('baselineRateVal').innerText = `${data.baseline_error_rate_pct}%`;
+            document.getElementById('throughputVal').innerText = `${data.throughput_per_sec}/s`;
+            document.getElementById('totalLogsVal').innerText = data.total_logs;
+
+            // Heart Function Efficiency (100% - error_rate)
+            const efficiency = Math.max(100 - Math.round(data.error_rate_pct * 1.1), 20);
+            document.getElementById('efficiencyVal').innerText = `${efficiency}%`;
+            document.getElementById('efficiencyBar').style.width = `${efficiency}%`;
+
+            if (efficiency < 75) {
+                document.getElementById('efficiencyStatus').innerText = "Abnormal";
+                document.getElementById('efficiencyStatus').className = "text-xs font-semibold text-rose-600 font-sans";
+            } else {
+                document.getElementById('efficiencyStatus').innerText = "Optimal";
+                document.getElementById('efficiencyStatus').className = "text-xs font-semibold text-blue-600 font-sans";
+            }
+
+            // Progress bar width
+            document.getElementById('errorRateProgress').style.width = `${Math.min(data.error_rate_pct, 100)}%`;
+
+            // Z-Score Badge Text
+            const tagElem = document.getElementById('zScoreTag');
+            if (data.z_score >= 5.0) {
+                tagElem.innerText = "CRITICAL ANOMALY";
+                tagElem.className = "text-xs font-bold text-rose-600 animate-pulse";
+            } else if (data.z_score >= 2.5) {
+                tagElem.innerText = "Elevated Risk";
+                tagElem.className = "text-xs font-bold text-amber-600";
+            } else {
+                tagElem.innerText = "Normal Baseline";
+                tagElem.className = "text-xs font-bold text-blue-600";
+            }
+        }
+
+        function handleAlert(alert) {
+            alertCount++;
+            document.getElementById('alertCountBadge').innerText = `${alertCount} Alerts`;
+
+            const feedList = document.getElementById('alertFeedList');
+            const emptyMsg = feedList.querySelector('.text-center');
+            if (emptyMsg) emptyMsg.remove();
+
+            const alertCard = document.createElement('div');
+            alertCard.className = "p-3.5 rounded-2xl border border-slate-200 bg-slate-50 flex flex-col gap-1.5 shadow-sm transition-all";
+
+            alertCard.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <span class="px-2.5 py-0.5 rounded-md bg-blue-600 text-white text-[10px] font-extrabold tracking-wider">${alert.severity} ANOMALY</span>
+                    <span class="text-[11px] text-slate-400 font-semibold font-mono">${alert.timestamp.split(' ')[1] || alert.timestamp}</span>
+                </div>
+                <h4 class="text-xs font-bold text-slate-900">${escapeHtml(alert.title)}</h4>
+                <p class="text-[11px] text-slate-600 line-clamp-2">${escapeHtml(alert.description)}</p>
+                <div class="flex items-center gap-3 text-[10px] font-bold text-slate-500 pt-1 border-t border-slate-200">
+                    <span>Z-Score: <strong class="text-blue-600 font-mono">${alert.z_score}</strong></span>
+                    <span>Errors: <strong class="text-slate-900 font-mono">${alert.error_logs_in_window}/${alert.total_logs_in_window}</strong></span>
+                    <span class="text-blue-600 ml-auto"><i class="fa-brands fa-aws"></i> CloudWatch Pushed</span>
+                </div>
+            `;
+
+            feedList.prepend(alertCard);
+        }
+
+        async function triggerSimulation(mode) {
+            try {
+                await fetch('/api/simulation/mode', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mode: mode, duration_sec: 15 })
+                });
+            } catch (e) {
+                console.error("Simulation trigger failed:", e);
+            }
+        }
+
+        async function triggerECGSimulation() {
+            try {
+                await fetch('/api/simulation/ecg', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mode: 'ecg', duration_sec: 30 })
+                });
+            } catch (e) {
+                console.error("ECG trigger failed:", e);
+            }
+        }
+
+        async function fetchStatus() {
+            try {
+                const res = await fetch('/api/status');
+                const data = await res.json();
+                if (data.aws_notifier) {
+                    document.getElementById('awsStatusText').innerText = `AWS Notifier: ${data.aws_notifier.mode}`;
+                }
+            } catch (e) {
+                console.error("Status fetch failed:", e);
+            }
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+    </script>
+</body>
+
+</html>

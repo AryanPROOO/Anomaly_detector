@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Healtho - Health Monitoring Dashboard</title>
+    <!-- Tailwind CSS v3 with Plugins -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        },
+                        dashboard: '#f8fafc',
+                        subtle: '#64748b'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Custom Styles for Glassmorphism & Precise Visuals -->
+    <style data-purpose="custom-styling">
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f5f7fb;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.72);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.85);
+        }
+
+        .floating-badge {
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.08);
+        }
+
+        /* Custom scrollbar hiding */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+
+<body class="text-slate-800 antialiased min-h-screen flex flex-col justify-between selection:bg-blue-100">
+    <!-- BEGIN: TopHeader -->
+    <header class="w-full px-8 py-4 flex items-center justify-between bg-transparent"
+        data-purpose="dashboard-navigation">
+        <!-- Brand Logo -->
+        <div class="flex items-center gap-2.5">
+            <div
+                class="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+                <svg class="w-5 h-5 fill-current" viewbox="0 0 24 24">
+                    <path
+                        d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z">
+                    </path>
+                </svg>
+            </div>
+            <span class="text-xl font-extrabold tracking-wider text-slate-900">HEALTHO</span>
+        </div>
+        <!-- Center Navigation Pills -->
+        <nav
+            class="hidden md:flex items-center bg-white/70 backdrop-blur-md p-1.5 rounded-full shadow-sm border border-slate-200/50 space-x-1">
+            <button
+                class="flex items-center gap-2 px-5 py-2 rounded-full bg-blue-600 text-white font-medium text-sm shadow-md shadow-blue-600/25 transition-all">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                    <path
+                        d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+                        stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                </svg>
+                <span>Overview</span>
+            </button>
+            <button
+                class="px-5 py-2 rounded-full text-slate-500 hover:text-slate-900 font-medium text-sm transition-colors">Doctors</button>
+            <button
+                class="px-5 py-2 rounded-full text-slate-500 hover:text-slate-900 font-medium text-sm transition-colors">Appointment</button>
+            <button
+                class="px-5 py-2 rounded-full text-slate-500 hover:text-slate-900 font-medium text-sm transition-colors">Schedule</button>
+            <button
+                class="px-5 py-2 rounded-full text-slate-500 hover:text-slate-900 font-medium text-sm transition-colors">Test
+                Results</button>
+        </nav>
+        <!-- Right User Controls -->
+        <div class="flex items-center gap-3">
+            <!-- Search Button -->
+            <button
+                class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-slate-600 shadow-sm border border-slate-100 hover:bg-slate-50 transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                    <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-linecap="round" stroke-linejoin="round"
+                        stroke-width="2"></path>
+                </svg>
+            </button>
+            <!-- Notification Button -->
+            <button
+                class="relative w-10 h-10 rounded-full bg-white flex items-center justify-center text-slate-600 shadow-sm border border-slate-100 hover:bg-slate-50 transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                    <path
+                        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                        stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                </svg>
+                <span class="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white"></span>
+            </button>
+            <!-- User Profile Avatar -->
+            <div class="w-10 h-10 rounded-full overflow-hidden ring-2 ring-white shadow-sm ml-1 cursor-pointer">
+                <img alt="James Avatar" class="w-full h-full object-cover"
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuCfxaqWEt6eddNQM-j1TkTO1-tAI0iA_I2cSKeKOlVMiQreTR7coE-NNOtrgeJsAvtUkUVYcD931xdEdmJZvYEXaUWRqNOMaHJ1JqpR3JnNQxdBWUq1B5NqZo6NxcyVkzjKwwwySfOtzkPjHdE8FrOyDH3BIg_62l5ghjUSuulizinBEPAGuO73d_EGlF3-DX8z1unKfXlj5oizQidSraQI_HBJTZW61HhS_5eaBTkDRjqG5X2MVvHPyg" />
+            </div>
+        </div>
+    </header>
+    <!-- END: TopHeader -->
+    <!-- BEGIN: MainContent -->
+    <main
+        class="flex-1 w-full max-w-[1580px] mx-auto p-4 md:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <!-- LEFT COLUMN: 3D Anatomical Viewer & Selector (7 Cols) -->
+        <section class="lg:col-span-7 flex flex-col justify-between h-full min-h-[640px]"
+            data-purpose="3d-organ-inspection">
+            <!-- Greeting Header -->
+            <div class="mb-4">
+                <h1 class="text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight">Hi, James!</h1>
+                <p class="text-slate-500 font-medium mt-1 text-sm">Let's monitor your health!</p>
+            </div>
+            <!-- 3D Heart Visual Canvas Container -->
+            <div class="relative flex-1 flex items-center justify-center my-2 select-none min-h-[420px]">
+                <!-- Floating Left Action Buttons -->
+                <div class="absolute left-0 top-1/2 -translate-y-1/2 flex flex-col gap-3 z-20">
+                    <button
+                        class="w-10 h-10 rounded-full bg-white/90 shadow-md border border-slate-100 flex items-center justify-center text-slate-600 hover:text-blue-600 hover:shadow-lg transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                            <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"
+                                stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                        </svg>
+                    </button>
+                    <button
+                        class="w-10 h-10 rounded-full bg-white/90 shadow-md border border-slate-100 flex items-center justify-center text-slate-600 hover:text-blue-600 hover:shadow-lg transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                            <path
+                                d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
+                                stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                        </svg>
+                    </button>
+                    <button
+                        class="w-10 h-10 rounded-full bg-white/90 shadow-md border border-slate-100 flex items-center justify-center text-slate-600 hover:text-blue-600 hover:shadow-lg transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                            <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7" stroke-linecap="round"
+                                stroke-linejoin="round" stroke-width="2"></path>
+                        </svg>
+                    </button>
+                </div>
+                <!-- Heart Visual Representation (Rendered SVG Replica) -->
+                <div class="relative w-[340px] h-[340px] sm:w-[380px] sm:h-[380px] flex items-center justify-center">
+                    <!-- Background Ambient Glow -->
+                    <div class="absolute inset-0 bg-red-400/20 blur-3xl rounded-full scale-90 pointer-events-none">
+                    </div>
+                    <!-- Anatomical SVG Heart Graphic -->
+                    <svg class="w-full h-full drop-shadow-[0_25px_35px_rgba(225,29,72,0.35)]" fill="none"
+                        viewbox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <lineargradient gradientunits="userSpaceOnUse" id="aortaGrad" x1="180" x2="300" y1="60"
+                                y2="280">
+                                <stop offset="0%" stop-color="#f87171"></stop>
+                                <stop offset="50%" stop-color="#ef4444"></stop>
+                                <stop offset="100%" stop-color="#b91c1c"></stop>
+                            </lineargradient>
+                            <radialgradient cx="40%" cy="40%" id="heartShade" r="65%">
+                                <stop offset="0%" stop-color="#f87171"></stop>
+                                <stop offset="45%" stop-color="#e11d48"></stop>
+                                <stop offset="85%" stop-color="#be123c"></stop>
+                                <stop offset="100%" stop-color="#881337"></stop>
+                            </radialgradient>
+                        </defs>
+                        <!-- Aorta & Superior Vena Cava -->
+                        <path d="M210 140 C200 60, 290 40, 310 140 C325 210, 290 260, 260 270" stroke="url(#aortaGrad)"
+                            stroke-linecap="round" stroke-width="40"></path>
+                        <path d="M220 70 L215 35 M255 60 L255 30 M285 70 L295 40" stroke="#f87171"
+                            stroke-linecap="round" stroke-width="16"></path>
+                        <!-- Pulmonary Arteries Branches Left & Right -->
+                        <path d="M170 200 C110 180, 80 250, 60 260 M100 215 C70 230, 50 210, 35 220" stroke="#ef4444"
+                            stroke-linecap="round" stroke-width="12"></path>
+                        <path d="M310 210 C380 200, 410 260, 440 270 M360 215 C400 235, 430 215, 450 230"
+                            stroke="#ef4444" stroke-linecap="round" stroke-width="12"></path>
+                        <!-- Main Heart Muscular Body / Ventricles -->
+                        <path
+                            d="M200 170 C140 170, 95 240, 130 330 C155 390, 210 460, 265 470 C310 478, 360 410, 370 330 C385 240, 310 170, 260 170 Z"
+                            fill="url(#heartShade)"></path>
+                        <!-- Ventricular Sulcus & Arterial Network Details -->
+                        <path d="M255 180 Q240 280, 295 450" opacity="0.6" stroke="#9f1239" stroke-linecap="round"
+                            stroke-width="8"></path>
+                        <path d="M250 260 Q200 310, 190 380" opacity="0.5" stroke="#9f1239" stroke-linecap="round"
+                            stroke-width="5"></path>
+                        <path d="M270 310 Q320 330, 335 390" opacity="0.5" stroke="#9f1239" stroke-linecap="round"
+                            stroke-width="4"></path>
+                        <path d="M245 210 Q210 220, 180 250" opacity="0.5" stroke="#9f1239" stroke-linecap="round"
+                            stroke-width="5"></path>
+                        <!-- Gloss Highlights for 3D realism -->
+                        <path d="M150 240 C140 300, 170 350, 200 380" filter="blur(4px)" opacity="0.3" stroke="#fda4af"
+                            stroke-linecap="round" stroke-width="8"></path>
+                        <path d="M295 230 C340 260, 350 330, 330 390" filter="blur(2px)" opacity="0.25" stroke="#ffffff"
+                            stroke-linecap="round" stroke-width="6"></path>
+                    </svg>
+                    <!-- Interactive Anatomical Hotspots (White glowing dots) -->
+                    <div
+                        class="absolute top-[28%] left-[45%] w-4 h-4 rounded-full bg-white ring-4 ring-white/40 shadow-lg cursor-pointer animate-pulse">
+                    </div>
+                    <div
+                        class="absolute top-[18%] left-[41%] w-3 h-3 rounded-full bg-white ring-4 ring-white/40 shadow-lg cursor-pointer">
+                    </div>
+                    <div
+                        class="absolute top-[65%] left-[34%] w-4 h-4 rounded-full bg-white ring-4 ring-white/40 shadow-lg cursor-pointer">
+                    </div>
+                    <div
+                        class="absolute bottom-[20%] right-[38%] w-3.5 h-3.5 rounded-full bg-white ring-4 ring-white/40 shadow-lg cursor-pointer">
+                    </div>
+                    <!-- Glassmorphism Floating Metric Card: Blood Glucose -->
+                    <div
+                        class="floating-badge absolute top-[36%] right-[10%] sm:right-[15%] rounded-3xl p-4 sm:p-5 flex flex-col min-w-[200px] z-30">
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="w-8 h-8 rounded-full bg-blue-600/10 flex items-center justify-center text-blue-600">
+                                <svg class="w-4 h-4 fill-blue-600" viewbox="0 0 20 20">
+                                    <path
+                                        d="M10 2.5a.75.75 0 01.7.472l3.418 8.046a5.5 5.5 0 11-8.236 0L9.3 2.972A.75.75 0 0110 2.5z">
+                                    </path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-semibold text-slate-700">Blood Glucose</h4>
+                                <p class="text-[11px] text-slate-400 font-medium">Levels</p>
+                            </div>
+                        </div>
+                        <div class="mt-3 flex items-baseline gap-1">
+                            <span class="text-3xl font-bold text-slate-900">89</span>
+                            <span class="text-xs font-semibold text-slate-500">mmol/L</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Rotation Arc Slider Indicator -->
+                <div class="absolute bottom-2 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none">
+                    <svg class="w-48 h-8 overflow-visible" viewbox="0 0 160 30">
+                        <path d="M 10 28 A 120 40 0 0 1 150 28" fill="none" stroke="#cbd5e1" stroke-dasharray="3 3"
+                            stroke-width="2"></path>
+                    </svg>
+                    <div
+                        class="w-5 h-5 -mt-3 rounded-full bg-blue-600 ring-4 ring-blue-100 shadow-md flex items-center justify-center">
+                        <div class="w-1.5 h-1.5 rounded-full bg-white"></div>
+                    </div>
+                </div>
+            </div>
+            <!-- Bottom Organ Selector Pill Strip -->
+            <div
+                class="bg-white rounded-full p-2 shadow-sm border border-slate-100 flex items-center justify-between gap-1 w-full max-w-xl mx-auto mt-4 overflow-x-auto no-scrollbar">
+                <button class="p-2 text-slate-400 hover:text-slate-600 transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                        <path d="M15 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5">
+                        </path>
+                    </svg>
+                </button>
+                <button
+                    class="flex items-center gap-2 px-4 py-2 rounded-full text-slate-500 hover:text-slate-900 text-xs font-semibold whitespace-nowrap transition">
+                    <svg class="w-4 h-4 stroke-current" fill="none" viewbox="0 0 24 24">
+                        <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                            stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                    </svg>
+                    <span>Full Body</span>
+                </button>
+                <button
+                    class="flex items-center gap-2 px-4 py-2 rounded-full text-slate-500 hover:text-slate-900 text-xs font-semibold whitespace-nowrap transition">
+                    <svg class="w-4 h-4 stroke-current" fill="none" viewbox="0 0 24 24">
+                        <path
+                            d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                            stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                    </svg>
+                    <span>Brain</span>
+                </button>
+                <!-- Active Organ Pill -->
+                <button
+                    class="flex items-center gap-2 px-5 py-2.5 rounded-full bg-blue-600 text-white text-xs font-semibold shadow-md shadow-blue-500/25 whitespace-nowrap transition">
+                    <svg class="w-4 h-4 fill-white" viewbox="0 0 24 24">
+                        <path
+                            d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z">
+                        </path>
+                    </svg>
+                    <span>Heart</span>
+                </button>
+                <button
+                    class="flex items-center gap-2 px-4 py-2 rounded-full text-slate-500 hover:text-slate-900 text-xs font-semibold whitespace-nowrap transition">
+                    <svg class="w-4 h-4 stroke-current" fill="none" viewbox="0 0 24 24">
+                        <circle cx="12" cy="12" r="9" stroke-width="2"></circle>
+                        <path d="M12 7v5l3 3" stroke-linecap="round" stroke-width="2"></path>
+                    </svg>
+                    <span>Kidney</span>
+                </button>
+                <button
+                    class="flex items-center gap-2 px-4 py-2 rounded-full text-slate-500 hover:text-slate-900 text-xs font-semibold whitespace-nowrap transition">
+                    <svg class="w-4 h-4 stroke-current" fill="none" viewbox="0 0 24 24">
+                        <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round"
+                            stroke-width="2"></path>
+                        <path
+                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                            stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                    </svg>
+                    <span>Eyes</span>
+                </button>
+                <button class="p-2 text-slate-400 hover:text-slate-600 transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                        <path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"></path>
+                    </svg>
+                </button>
+            </div>
+        </section>
+        <!-- END: Left Column -->
+        <!-- RIGHT COLUMN: Metrics & Appointments (5 Cols) -->
+        <section class="lg:col-span-5 flex flex-col gap-6" data-purpose="metrics-and-schedules">
+            <!-- Top Row Stat Cards (2 Cards) -->
+            <div class="grid grid-cols-2 gap-4">
+                <!-- Stat Card 1: Heart Rate -->
+                <div
+                    class="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between h-[170px]">
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-600">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                                <path
+                                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                                    stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <span class="text-xs font-semibold text-slate-400">Heart Rate</span>
+                            <p class="text-xl font-bold text-slate-900 mt-0.5">108<span
+                                    class="text-xs font-medium text-slate-500">/Bmp</span></p>
+                        </div>
+                    </div>
+                    <!-- ECG Pulse Waveform -->
+                    <div class="w-full h-12 flex items-end">
+                        <svg class="w-full h-10 overflow-visible" preserveaspectratio="none" viewbox="0 0 180 40">
+                            <path
+                                d="M 0 20 L 25 20 L 32 12 L 40 25 L 48 5 L 56 32 L 64 16 L 72 20 L 95 20 L 102 10 L 110 30 L 118 2 L 126 36 L 134 18 L 142 20 L 180 20"
+                                fill="none" stroke="#2563eb" stroke-linecap="round" stroke-linejoin="round"
+                                stroke-width="2"></path>
+                        </svg>
+                    </div>
+                </div>
+                <!-- Stat Card 2: Blood Status -->
+                <div
+                    class="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between h-[170px]">
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-600">
+                            <svg class="w-4 h-4 fill-slate-700" viewbox="0 0 20 20">
+                                <path
+                                    d="M10 2.5a.75.75 0 01.7.472l3.418 8.046a5.5 5.5 0 11-8.236 0L9.3 2.972A.75.75 0 0110 2.5z">
+                                </path>
+                            </svg>
+                        </div>
+                        <div>
+                            <span class="text-xs font-semibold text-slate-400">Blood Status</span>
+                            <p class="text-xl font-bold text-slate-900 mt-0.5">116/70</p>
+                        </div>
+                    </div>
+                    <!-- Vertical Histogram Audio Level Chart -->
+                    <div class="flex items-end justify-between h-14 pt-2">
+                        <div class="flex items-end gap-1.5 h-full">
+                            <span class="w-1 bg-slate-200 rounded-full h-6"></span>
+                            <span class="w-1 bg-slate-200 rounded-full h-9"></span>
+                            <span class="w-1 bg-slate-200 rounded-full h-4"></span>
+                            <span class="w-1 bg-slate-200 rounded-full h-11"></span>
+                            <span class="w-1 bg-slate-200 rounded-full h-8"></span>
+                            <span class="w-1 bg-blue-600 rounded-full h-12 shadow-sm"></span>
+                            <span class="w-1 bg-slate-200 rounded-full h-7"></span>
+                            <span class="w-1 bg-slate-200 rounded-full h-10"></span>
+                            <span class="w-1 bg-slate-200 rounded-full h-5"></span>
+                        </div>
+                        <div class="text-right pl-2">
+                            <div class="text-xs font-bold text-slate-800">116</div>
+                            <div class="text-[10px] text-slate-400 font-semibold">/75</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Middle Row Stat Cards (2 Cards) -->
+            <div class="grid grid-cols-2 gap-4">
+                <!-- Stat Card 3: Blood Glucose Dots Matrix -->
+                <div
+                    class="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between h-[170px]">
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-600">
+                            <svg class="w-4 h-4 fill-slate-700" viewbox="0 0 20 20">
+                                <circle cx="10" cy="10" r="7"></circle>
+                            </svg>
+                        </div>
+                        <div>
+                            <span class="text-xs font-semibold text-slate-400">Blood Glucose</span>
+                            <p class="text-xl font-bold text-slate-900 mt-0.5">98/56</p>
+                        </div>
+                    </div>
+                    <!-- 4x10 Matrix of Dots -->
+                    <div class="grid grid-cols-10 gap-1.5 pt-2">
+                        <!-- Row 1 -->
+                        <span class="w-2 h-2 rounded-full bg-blue-400"></span><span
+                            class="w-2 h-2 rounded-full bg-blue-400"></span>
+                        <span class="w-2 h-2 rounded-full bg-blue-400"></span><span
+                            class="w-2 h-2 rounded-full bg-blue-400"></span>
+                        <span class="w-2 h-2 rounded-full bg-blue-400"></span><span
+                            class="w-2 h-2 rounded-full bg-blue-400"></span>
+                        <span class="w-2 h-2 rounded-full bg-blue-400"></span><span
+                            class="w-2 h-2 rounded-full bg-blue-400"></span>
+                        <span class="w-2 h-2 rounded-full bg-blue-400"></span><span
+                            class="w-2 h-2 rounded-full bg-blue-400"></span>
+                        <!-- Row 2 -->
+                        <span class="w-2 h-2 rounded-full bg-blue-400"></span><span
+                            class="w-2 h-2 rounded-full bg-blue-400"></span>
+                        <span class="w-2 h-2 rounded-full bg-blue-400"></span><span
+                            class="w-2 h-2 rounded-full bg-blue-400"></span>
+                        <span class="w-2 h-2 rounded-full bg-blue-400"></span><span
+                            class="w-2 h-2 rounded-full bg-blue-400"></span>
+                        <span class="w-2 h-2 rounded-full bg-blue-400"></span><span
+                            class="w-2 h-2 rounded-full bg-blue-400"></span>
+                        <span class="w-2 h-2 rounded-full bg-blue-400"></span><span
+                            class="w-2 h-2 rounded-full bg-blue-400"></span>
+                        <!-- Row 3 -->
+                        <span class="w-2 h-2 rounded-full bg-blue-400"></span><span
+                            class="w-2 h-2 rounded-full bg-blue-400"></span>
+                        <span class="w-2 h-2 rounded-full bg-blue-400"></span><span
+                            class="w-2 h-2 rounded-full bg-blue-400"></span>
+                        <span class="w-2 h-2 rounded-full bg-blue-400"></span><span
+                            class="w-2 h-2 rounded-full bg-blue-400"></span>
+                        <span class="w-2 h-2 rounded-full bg-blue-400"></span><span
+                            class="w-2 h-2 rounded-full bg-blue-400"></span>
+                        <span class="w-2 h-2 rounded-full bg-blue-400"></span><span
+                            class="w-2 h-2 rounded-full bg-blue-400"></span>
+                        <!-- Row 4 -->
+                        <span class="w-2 h-2 rounded-full bg-blue-400"></span><span
+                            class="w-2 h-2 rounded-full bg-blue-400"></span>
+                        <span class="w-2 h-2 rounded-full bg-blue-400"></span><span
+                            class="w-2 h-2 rounded-full bg-blue-400"></span>
+                        <span class="w-2 h-2 rounded-full bg-blue-400"></span><span
+                            class="w-2 h-2 rounded-full bg-blue-400"></span>
+                        <span class="w-2 h-2 rounded-full bg-blue-400"></span><span
+                            class="w-2 h-2 rounded-full bg-blue-400"></span>
+                        <span class="w-2 h-2 rounded-full bg-blue-400"></span><span
+                            class="w-2 h-2 rounded-full bg-blue-400"></span>
+                    </div>
+                </div>
+                <!-- Stat Card 4: Heart Function Efficiency -->
+                <div
+                    class="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between h-[170px]">
+                    <div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold text-slate-800">Heart Function Efficiency</span>
+                            <button class="text-slate-400 hover:text-slate-700">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                                    <path d="M7 17L17 7M17 7H7M17 7v10" stroke-linecap="round" stroke-linejoin="round"
+                                        stroke-width="2.5"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="mt-2 flex items-baseline gap-2">
+                            <span class="text-2xl font-bold text-slate-900">89%</span>
+                            <span class="text-xs font-semibold text-slate-500">Moderate</span>
+                        </div>
+                    </div>
+                    <!-- Gradient Progress Bar -->
+                    <div class="space-y-1.5">
+                        <div class="w-full h-5 rounded-xl bg-slate-100 overflow-hidden p-0.5">
+                            <div
+                                class="h-full rounded-lg bg-gradient-to-r from-blue-600 via-blue-400 to-blue-100 w-[89%]">
+                            </div>
+                        </div>
+                        <div class="flex justify-between text-[11px] font-semibold text-slate-400">
+                            <span>0</span>
+                            <span>100%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Upcoming Appointments & Calendar Section -->
+            <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex flex-col gap-5">
+                <!-- Section Title & Options -->
+                <div class="flex items-center justify-between">
+                    <h3 class="text-base font-bold text-slate-900">Upcoming Appointments</h3>
+                    <button class="text-slate-400 hover:text-slate-600">
+                        <svg class="w-4 h-4" fill="currentColor" viewbox="0 0 20 20">
+                            <circle cx="10" cy="4" r="2"></circle>
+                            <circle cx="10" cy="10" r="2"></circle>
+                            <circle cx="10" cy="16" r="2"></circle>
+                        </svg>
+                    </button>
+                </div>
+                <!-- Weekly Date Strip Carousel -->
+                <div class="flex items-center justify-between gap-1 text-center">
+                    <button class="text-slate-400 hover:text-slate-600 p-1">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                            <path d="M15 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+                            </path>
+                        </svg>
+                    </button>
+                    <!-- Day 18 -->
+                    <div class="flex flex-col items-center py-2 px-2.5 rounded-2xl cursor-pointer hover:bg-slate-50">
+                        <span class="text-xs font-semibold text-slate-400">18</span>
+                        <span class="text-[11px] font-medium text-slate-500 mt-1">Sat</span>
+                    </div>
+                    <!-- Day 19 -->
+                    <div class="flex flex-col items-center py-2 px-2.5 rounded-2xl cursor-pointer hover:bg-slate-50">
+                        <span class="text-xs font-semibold text-slate-400">19</span>
+                        <span class="text-[11px] font-medium text-slate-500 mt-1">Sun</span>
+                    </div>
+                    <!-- Day 20 -->
+                    <div class="flex flex-col items-center py-2 px-2.5 rounded-2xl cursor-pointer hover:bg-slate-50">
+                        <span class="text-xs font-semibold text-slate-400">20</span>
+                        <span class="text-[11px] font-medium text-slate-500 mt-1">Mon</span>
+                    </div>
+                    <!-- Day 21 (Active Selection) -->
+                    <div
+                        class="flex flex-col items-center py-2.5 px-3.5 rounded-2xl bg-blue-600 text-white shadow-md shadow-blue-500/25">
+                        <span class="text-xs font-bold">21</span>
+                        <span class="text-[11px] font-semibold mt-0.5">Tue</span>
+                    </div>
+                    <!-- Day 22 -->
+                    <div class="flex flex-col items-center py-2 px-2.5 rounded-2xl cursor-pointer hover:bg-slate-50">
+                        <span class="text-xs font-semibold text-slate-400">22</span>
+                        <span class="text-[11px] font-medium text-slate-500 mt-1">Wed</span>
+                    </div>
+                    <!-- Day 23 -->
+                    <div class="flex flex-col items-center py-2 px-2.5 rounded-2xl cursor-pointer hover:bg-slate-50">
+                        <span class="text-xs font-semibold text-slate-400">23</span>
+                        <span class="text-[11px] font-medium text-slate-500 mt-1">Thu</span>
+                    </div>
+                    <!-- Day 24 -->
+                    <div class="flex flex-col items-center py-2 px-2.5 rounded-2xl cursor-pointer hover:bg-slate-50">
+                        <span class="text-xs font-semibold text-slate-400">24</span>
+                        <span class="text-[11px] font-medium text-slate-500 mt-1">Fri</span>
+                    </div>
+                    <button class="text-slate-400 hover:text-slate-600 p-1">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                            <path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+                            </path>
+                        </svg>
+                    </button>
+                </div>
+                <!-- Featured Doctor Appointment Card -->
+                <div class="bg-slate-50/70 border border-slate-100/80 rounded-2xl p-4 flex flex-col gap-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold text-slate-600">Doctor Details</span>
+                        <button class="text-slate-400 hover:text-slate-700">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                                <path d="M7 17L17 7M17 7H7M17 7v10" stroke-linecap="round" stroke-linejoin="round"
+                                    stroke-width="2.5"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <img alt="Alina Bhart" class="w-11 h-11 rounded-full object-cover shadow-sm"
+                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuAYNH6NPeOQashhtw4DDWV5-TtylP3rKUxtICXgFGSjR1BpfziL2vR8tjInv7flnHEgcvxLjWrR0lKYT8T29DEdS-TSRh3TVyxRMEIo6nKWcG9vCEewHKpYVlCq_b3O7BsEPUjqARf9KaLKQOCd0V6i9GQUZCjjq1ck-QTelwJwRclgoQ4_NByV6ECpdFxlDJgG_RLManayeBw6RyYMgVlRBtg5q1tOtdRu0--3qFKZ7XD9_p4YO2PiZg" />
+                            <div>
+                                <h4 class="text-xs font-bold text-slate-900">Alina Bhart</h4>
+                                <p class="text-[11px] font-medium text-slate-400">Cardiologist</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xs font-bold text-slate-900">08:35 - 09:30 Pm</div>
+                            <div class="text-[11px] font-semibold text-slate-400 mt-0.5">21 August</div>
+                        </div>
+                        <!-- Call & Chat Buttons -->
+                        <div class="flex items-center gap-2">
+                            <button
+                                class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-500/20 hover:bg-blue-700 transition">
+                                <svg class="w-3.5 h-3.5" fill="currentColor" viewbox="0 0 20 20">
+                                    <path
+                                        d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z">
+                                    </path>
+                                </svg>
+                            </button>
+                            <button
+                                class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-500/20 hover:bg-blue-700 transition">
+                                <svg class="w-3.5 h-3.5" fill="currentColor" viewbox="0 0 20 20">
+                                    <path clip-rule="evenodd"
+                                        d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z"
+                                        fill-rule="evenodd"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Horizontal Row of Other Doctor Cards -->
+                <div class="grid grid-cols-3 gap-2.5 pt-1">
+                    <!-- Mini Doctor Card 1 -->
+                    <div
+                        class="bg-slate-50/70 border border-slate-100 rounded-2xl p-2.5 flex flex-col justify-between h-[90px]">
+                        <div class="flex items-center justify-between text-[10px] text-slate-400 font-semibold">
+                            <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                                <path
+                                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                                    stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                            </svg>
+                            <span>22 August</span>
+                        </div>
+                        <div class="flex items-center gap-2 mt-1">
+                            <img alt="Dr Clark" class="w-6 h-6 rounded-full object-cover"
+                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBK-3UH-Y0Qn42npJ0XSha6itw8riSP6I74S7yrpYX2XoqE29ypW7i7VtKSbkZ1jcL264rzEy78C1_RMMQvU5vQY309FROXUe0tED-YgHE6odnetbkBsbASrnJBRrYt7SpaCZa7AUtgOd5fbNRBf9mrgABXuIfuVVf601Znu7ImJ9BZlNTvtXt32Sac4TBCDM3BffywSlwX6NgCz9Eh5p2NL9Y8SMhtkjhsBKkQ_0fHKJQ0ilhs3Qr0_Q" />
+                            <div class="truncate">
+                                <h5 class="text-[11px] font-bold text-slate-800 truncate">Dr. Clark</h5>
+                                <p class="text-[9px] text-slate-400 font-medium truncate">Neurologist</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Mini Doctor Card 2 -->
+                    <div
+                        class="bg-slate-50/70 border border-slate-100 rounded-2xl p-2.5 flex flex-col justify-between h-[90px]">
+                        <div class="flex items-center justify-between text-[10px] text-slate-400 font-semibold">
+                            <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                                <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round"
+                                    stroke-linejoin="round" stroke-width="2"></path>
+                                <path
+                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                                    stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                            </svg>
+                            <span>23 August</span>
+                        </div>
+                        <div class="flex items-center gap-2 mt-1">
+                            <img alt="Dr Jack" class="w-6 h-6 rounded-full object-cover"
+                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuAST2n-R2X2yJJ8lFZnCKTqd6BT2_sOpb-7gq1B2a6ZL53MUsGwLUqJ2__PFEGE1G0RiNxllLmrdWMTCNV4sP3Kp8iqP-wiTvbramq9NIxaKuDW2OTyxMIyNIBjlf3jlMw9MKq-NMLjd5-ZwxyR0MDKxX_L7m4Ev7pvhdAO-hKuc9keNzYzF_a-la_uhgyEyBMj-5XKzIVOW4AtpnyLl7kyRd8PRl2G6g-Kp_7KVqEOhgPlkv5E-mkpCw" />
+                            <div class="truncate">
+                                <h5 class="text-[11px] font-bold text-slate-800 truncate">Dr. Jack</h5>
+                                <p class="text-[9px] text-slate-400 font-medium truncate">Optician</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Mini Doctor Card 3 -->
+                    <div
+                        class="bg-slate-50/70 border border-slate-100 rounded-2xl p-2.5 flex flex-col justify-between h-[90px]">
+                        <div class="flex items-center justify-between text-[10px] text-slate-400 font-semibold">
+                            <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                                <circle cx="12" cy="12" r="9" stroke-width="2"></circle>
+                            </svg>
+                            <span>27 August</span>
+                        </div>
+                        <div class="flex items-center gap-2 mt-1">
+                            <img alt="Dr Robert" class="w-6 h-6 rounded-full object-cover"
+                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCoxvmjJM0-JHlh_9yoknB_vPWBT-fJ6l83vacO-HriPF0sR0jqfcG9jVq715MlBLxP9KsAEg4tI_C8Ccx4hriycPco4ziD_GpTK3Il8qU98NvD2U9U_y6nvbucAXWg9TiiqqwLdkZ2sZQPFA7c4ey0WiwHkhVgaoLacnLYvDVEYtUBZp9aEI-MpJTGsVOFVxHTLRoC5oHUO5P5Y39hXtP8gRFIra5DQnAa9HDKOlgF4jls8u3ZP6Xufw" />
+                            <div class="truncate">
+                                <h5 class="text-[11px] font-bold text-slate-800 truncate">Dr. Robert</h5>
+                                <p class="text-[9px] text-slate-400 font-medium truncate">Urologist</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- END: Right Column -->
+    </main>
+    <!-- END: MainContent -->
+</body>
+
+</html>
